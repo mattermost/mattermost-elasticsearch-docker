@@ -1,0 +1,35 @@
+name: Publish Docker image
+
+on:
+  push:
+    tags: v*
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: cd/Check out the repo
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      
+      - name: cd/Login to Docker Hub
+        uses: docker/login-action@3da7dc6e2b31f99ef2cb9fb4c50fb0971e0d0139 # v2.1.0
+        with:
+            username: ${{ secrets.DOCKERHUB_DEV_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_DEV_TOKEN }}
+      
+      - name: cd/Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@818d4b7b91585d195f67373fd9cb0332e31a7175 # v4.6.0
+        with:
+          images: mattermostdevelopment/mattermost-elasticsearch
+      
+      - name: cd/Build and push Docker image
+        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825 # v4.1.1
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64/v8
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
